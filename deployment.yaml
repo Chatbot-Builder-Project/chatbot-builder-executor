@@ -1,0 +1,25 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-builder-engine
+  labels:
+    app: chatbot-builder-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatbot-builder-engine
+  template:
+    metadata:
+      name: chatbot-builder-engine
+      labels:
+        app: chatbot-builder-engine
+    spec:
+      containers:
+        - name: chatbot-builder-engine
+          image: chatbot-builder-engine:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              protocol: TCP
+      restartPolicy: Always
