@@ -1,0 +1,35 @@
+name: Build and Push to ACR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the code
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Step 2: Log in to Azure Container Registry (ACR)
+    - name: Log in to ACR
+      run: |
+        echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+
+    # Step 3: Build and push the Docker image to ACR
+    - name: Build and push Docker image
+      run: |
+        docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-engine:latest .
+        docker push ${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-engine:latest
+
+    # Step 4: Trigger deployment in the chatbot-builder-k8s repo
+    - name: Trigger deployment in k8s repo
+      run: |
+        curl -X POST \
+        -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        -H "Accept: application/vnd.github.everest-preview+json" \
+        https://api.github.com/repos/Chatbot-Builder-Project/chatbot-builder-k8s/dispatches \
+        -d '{"event_type":"deploy_chatbot"}'
