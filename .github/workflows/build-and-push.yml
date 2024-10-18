@@ -4,33 +4,47 @@ on:
   push:
     branches:
       - main
+      - develop
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout the code
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    # Step 2: Log in to Azure Container Registry (ACR)
-    - name: Log in to ACR
-      run: |
-        echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+      - name: Log in to ACR
+        run: |
+          echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
 
-    # Step 3: Build and push the Docker image to ACR
-    - name: Build and push Docker image
-      run: |
-        docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-engine:latest .
-        docker push ${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-engine:latest
+      - name: Build and push Docker image for staging or production
+        run: |
+          # Create a tag that is common to both staging and production
+          if [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            IMAGE_TAG="staging-${{ github.sha }}"
+          else
+            IMAGE_TAG="prod-${{ github.sha }}"
+          fi
+          
+          # Build and push the Docker image to ACR
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-engine:${IMAGE_TAG} .
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-engine:${IMAGE_TAG}
 
-    # Step 4: Trigger deployment in the chatbot-builder-k8s repo
-    - name: Trigger deployment in k8s repo
-      run: |
-        RESPONSE=$(curl -X POST \
-          -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
-          -H "Accept: application/vnd.github.everest-preview+json" \
-          https://api.github.com/repos/Chatbot-Builder-Project/chatbot-builder-k8s/dispatches \
-          -d '{"event_type":"deploy_chatbot"}')
-        echo "Response: $RESPONSE"
+      - name: Trigger staging deployment in k8s repo
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            https://api.github.com/repos/Chatbot-Builder-Project/chatbot-builder-k8s/dispatches \
+            -d '{"event_type":"deploy_chatbot_staging", "client_payload": {"image_tag": "staging-${{ github.sha }}"}}'
+
+      - name: Trigger production deployment in k8s repo
+        if: github.ref == 'refs/heads/main'
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            https://api.github.com/repos/Chatbot-Builder-Project/chatbot-builder-k8s/dispatches \
+            -d '{"event_type":"deploy_chatbot_production", "client_payload": {"image_tag": "prod-${{ github.sha }}"}}'
