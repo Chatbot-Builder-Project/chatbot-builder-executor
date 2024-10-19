@@ -6,7 +6,7 @@ This is the execution engine for the Chatbot Builder, responsible for executing 
 
 ## Commands
 
-### Builder & Run
+### Build & Run
 
 ```bash
 docker build -t chatbot-builder-engine .
