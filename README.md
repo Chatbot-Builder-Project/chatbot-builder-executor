@@ -20,6 +20,5 @@ SENTRY_ENVIRONMENT= (optional)
 ### Build & Run
 
 ```bash
-docker build -t chatbot-builder-engine .
-docker run -p 8083:80 chatbot-builder-engine
+docker-compose up --build
 ```
