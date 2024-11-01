@@ -1,8 +1,22 @@
+import sentry_sdk
 from loguru import logger
 import os
 import sys
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+SENTRY_DSN = os.getenv("SENTRY_DSN")
+SENTRY_LOG_LEVEL = os.getenv("SENTRY_LOG_LEVEL", "ERROR")
+SENTRY_ENVIRONMENT = os.getenv("SENTRY_ENVIRONMENT", "development")
+
+# Initialize Sentry
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    traces_sample_rate=1.0,
+    _experiments={
+        "continuous_profiling_auto_start": True,
+    },
+    environment=SENTRY_ENVIRONMENT
+)
 
 # Remove the default handler
 logger.remove()
@@ -25,5 +39,14 @@ logger.add(
     level=LOG_LEVEL,
     serialize=True,
 )
+
+
+# Sentry sink
+def sentry_sink(message):
+    if message.record["level"].name in (SENTRY_LOG_LEVEL, "CRITICAL"):
+        sentry_sdk.capture_message(message)
+
+
+logger.add(sentry_sink, level=SENTRY_LOG_LEVEL)
 
 __all__ = ["logger"]
