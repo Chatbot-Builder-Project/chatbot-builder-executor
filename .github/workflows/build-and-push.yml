@@ -38,7 +38,7 @@ jobs:
             -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
             -H "Accept: application/vnd.github.everest-preview+json" \
             https://api.github.com/repos/Chatbot-Builder-Project/chatbot-builder-k8s/dispatches \
-            -d '{"event_type":"deploy_chatbot_staging", "client_payload": {"image_tag": "staging-${{ github.sha }}"}}'
+            -d '{"event_type":"deploy_chatbot_staging", "client_payload": {"image_name": "${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-api", "image_tag": "staging-${{ github.sha }}"}}'
 
       - name: Trigger production deployment in k8s repo
         if: github.ref == 'refs/heads/main'
@@ -47,4 +47,4 @@ jobs:
             -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
             -H "Accept: application/vnd.github.everest-preview+json" \
             https://api.github.com/repos/Chatbot-Builder-Project/chatbot-builder-k8s/dispatches \
-            -d '{"event_type":"deploy_chatbot_production", "client_payload": {"image_tag": "prod-${{ github.sha }}"}}'
+            -d '{"event_type":"deploy_chatbot_production", "client_payload": {"image_name": "${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-api", "image_tag": "prod-${{ github.sha }}"}}'
