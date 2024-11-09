@@ -1,8 +1,9 @@
-# Chatbot Builder Engine
+# Chatbot Builder Executor
 
 ## Description
 
-This is the execution engine for the Chatbot Builder, responsible for executing the chatbot logic.
+This is the execution service for the Chatbot Builder, responsible for executing the chatbot flow logic such as
+LLM generation calls, and other processing tasks.
 
 ## Setup
 

@@ -28,8 +28,8 @@ jobs:
           fi
           
           # Build and push the Docker image to ACR
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-engine:${IMAGE_TAG} .
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-engine:${IMAGE_TAG}
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-executor:${IMAGE_TAG} .
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-executor:${IMAGE_TAG}
 
       - name: Trigger staging deployment in k8s repo
         if: github.ref == 'refs/heads/develop'

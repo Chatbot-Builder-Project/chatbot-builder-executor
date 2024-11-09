@@ -4,8 +4,8 @@ from app.core.middlewares import log_request_response_middleware
 
 # Create the FastAPI application
 app = FastAPI(
-    title="Chatbot Builder Engine API",
-    description="The execution engine for the Chatbot Builder.",
+    title="Chatbot Builder Executor API",
+    description="The execution service for the Chatbot Builder.",
     version="1.0.0"
 )
 
