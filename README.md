@@ -7,14 +7,7 @@ LLM generation calls, and other processing tasks.
 
 ## Setup
 
-- Add `.env` file in the `app` directory with the following content:
-
-```env
-LOG_LEVEL= (optional)
-SENTRY_DSN=
-SENTRY_LOG_LEVEL= (optional)
-SENTRY_ENVIRONMENT= (optional)
-```
+- Add `.env` file in the `app` directory (no variables are required for now).
 
 ## Commands
 

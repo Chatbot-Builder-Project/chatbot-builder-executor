@@ -40,13 +40,13 @@ logger.add(
     serialize=True,
 )
 
-
 # Sentry sink
-def sentry_sink(message):
-    if message.record["level"].name in (SENTRY_LOG_LEVEL, "CRITICAL"):
-        sentry_sdk.capture_message(message)
+if SENTRY_ENVIRONMENT != "development":
+    def sentry_sink(message):
+        if message.record["level"].name in (SENTRY_LOG_LEVEL, "CRITICAL"):
+            sentry_sdk.capture_message(message)
 
 
-logger.add(sentry_sink, level=SENTRY_LOG_LEVEL)
+    logger.add(sentry_sink, level=SENTRY_LOG_LEVEL)
 
 __all__ = ["logger"]
