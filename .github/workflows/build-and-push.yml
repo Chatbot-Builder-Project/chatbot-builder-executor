@@ -33,17 +33,16 @@ jobs:
           fi
 
           # Define the image name and full image path
-          IMAGE_NAME="docker.io/${{ secrets.DOCKER_USERNAME }}/chatbot-builder-executor"
-          FULL_IMAGE_NAME="${IMAGE_NAME}:${IMAGE_TAG}"
+          IMAGE_NAME="chatbot-builder-executor"
+          IMAGE_FULL_NAME="$docker.io/${{ secrets.DOCKER_USERNAME }}/${IMAGE_NAME}:${IMAGE_TAG}"
           
           # Build and push the Docker image to Docker Hub
-          docker build -t "$FULL_IMAGE_NAME" .
-          docker push "$FULL_IMAGE_NAME"
+          docker build -t "$IMAGE_FULL_NAME" .
+          docker push "$IMAGE_FULL_NAME"
           
           # Export variables for use in the next steps
-          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
           echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
-          echo "FULL_IMAGE_NAME=${FULL_IMAGE_NAME}" >> $GITHUB_ENV
+          echo "IMAGE_FULL_NAME=${IMAGE_FULL_NAME}" >> $GITHUB_ENV
           echo "EVENT_TYPE=${EVENT_TYPE}" >> $GITHUB_ENV
 
       - name: Trigger deployment in infra repo
@@ -52,4 +51,4 @@ jobs:
             -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
             -H "Accept: application/vnd.github.everest-preview+json" \
             https://api.github.com/repos/Chatbot-Builder-Project/chatbot-builder-infra/dispatches \
-            -d '{"event_type":"'"${{ env.EVENT_TYPE }}"'", "client_payload": {"image_name": "'"${{ env.IMAGE_NAME }}"'", "image_tag": "'"${{ env.IMAGE_TAG }}"'"}}'
+            -d '{"event_type":"'"${{ env.EVENT_TYPE }}"'", "client_payload": {"image_full_name": "'"${{ env.IMAGE_FULL_NAME }}"'", "image_manifest_name": "'"${{ env.IMAGE_NAME }}"'"}}'
