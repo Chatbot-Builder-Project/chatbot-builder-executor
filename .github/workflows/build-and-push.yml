@@ -1,4 +1,4 @@
-name: Build and Push to ACR
+name: Build and Push to Docker Hub
 
 on:
   push:
@@ -14,37 +14,42 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Log in to ACR
+      - name: Log in to Docker Hub
         run: |
-          echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} -u ${{ secrets.ACR_USERNAME }} --password-stdin
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login docker.io -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build and push Docker image for staging or production
         run: |
-          # Create a tag that is common to both staging and production
+          # Determine the image tag and event type based on the branch
           if [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
             IMAGE_TAG="staging-${{ github.sha }}"
-          else
+            EVENT_TYPE="deploy_chatbot_staging"
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             IMAGE_TAG="prod-${{ github.sha }}"
+            EVENT_TYPE="deploy_chatbot_production"
+          else
+            echo "Unsupported branch: ${{ github.ref }}. Exiting."
+            exit 1
           fi
+
+          # Define the image name and full image path
+          IMAGE_NAME="docker.io/${{ secrets.DOCKER_USERNAME }}/chatbot-builder-executor"
+          FULL_IMAGE_NAME="${IMAGE_NAME}:${IMAGE_TAG}"
           
-          # Build and push the Docker image to ACR
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-executor:${IMAGE_TAG} .
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/chatbot-builder-executor:${IMAGE_TAG}
+          # Build and push the Docker image to Docker Hub
+          docker build -t "$FULL_IMAGE_NAME" .
+          docker push "$FULL_IMAGE_NAME"
+          
+          # Export variables for use in the next steps
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
+          echo "FULL_IMAGE_NAME=${FULL_IMAGE_NAME}" >> $GITHUB_ENV
+          echo "EVENT_TYPE=${EVENT_TYPE}" >> $GITHUB_ENV
 
-      - name: Trigger staging deployment in k8s repo
-        if: github.ref == 'refs/heads/develop'
+      - name: Trigger deployment in infra repo
         run: |
           curl -X POST \
             -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
             -H "Accept: application/vnd.github.everest-preview+json" \
-            https://api.github.com/repos/Chatbot-Builder-Project/chatbot-builder-k8s/dispatches \
-            -d '{"event_type":"deploy_chatbot_staging", "client_payload": {"image_name": "chatbot-builder-executor", "image_tag": "staging-${{ github.sha }}"}}'
-
-      - name: Trigger production deployment in k8s repo
-        if: github.ref == 'refs/heads/main'
-        run: |
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
-            -H "Accept: application/vnd.github.everest-preview+json" \
-            https://api.github.com/repos/Chatbot-Builder-Project/chatbot-builder-k8s/dispatches \
-            -d '{"event_type":"deploy_chatbot_production", "client_payload": {"image_name": "chatbot-builder-executor", "image_tag": "prod-${{ github.sha }}"}}'
+            https://api.github.com/repos/Chatbot-Builder-Project/chatbot-builder-infra/dispatches \
+            -d '{"event_type":"'"${{ env.EVENT_TYPE }}"'", "client_payload": {"image_name": "'"${{ env.IMAGE_NAME }}"'", "image_tag": "'"${{ env.IMAGE_TAG }}"'"}}'
