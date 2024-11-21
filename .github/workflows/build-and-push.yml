@@ -34,7 +34,7 @@ jobs:
 
           # Define the image name and full image path
           IMAGE_NAME="chatbot-builder-executor"
-          IMAGE_FULL_NAME="$docker.io/${{ secrets.DOCKER_USERNAME }}/${IMAGE_NAME}:${IMAGE_TAG}"
+          IMAGE_FULL_NAME="docker.io/${{ secrets.DOCKER_USERNAME }}/${IMAGE_NAME}:${IMAGE_TAG}"
           
           # Build and push the Docker image to Docker Hub
           docker build -t "$IMAGE_FULL_NAME" .
