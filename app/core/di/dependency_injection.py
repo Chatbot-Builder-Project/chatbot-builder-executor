@@ -1,9 +1,13 @@
 from injector import Binder, Injector
 
+from app.application.generation import GenerationService, DefaultGenerationService
+from app.application.routing import RoutingService, DefaultRoutingService
+
 
 # Configure the dependency injection container
 def configure(binder: Binder) -> None:
-    # binder.bind(MyServiceInterface, to=MyService, scope=singleton)
+    binder.bind(GenerationService, to=DefaultGenerationService)
+    binder.bind(RoutingService, to=DefaultRoutingService)
     pass
 
 

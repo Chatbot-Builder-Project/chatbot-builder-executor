@@ -1,21 +1,24 @@
 import time
-from typing import Callable
-
+from typing import Callable, Any
 import grpc
-from grpc_interceptor import ServerInterceptor
 
 from app.core.logger import logger
 
 
-class LoggingInterceptor(ServerInterceptor):
-    def intercept(self, method: Callable, request: any, context: grpc.ServicerContext, method_name: str) -> any:
+class LoggingInterceptor(grpc.aio.ServerInterceptor):
+    async def intercept_service(
+            self,
+            continuation: Callable[[grpc.HandlerCallDetails], Any],
+            handler_call_details: grpc.HandlerCallDetails,
+    ) -> Any:
         start_time = time.time()
+        method_name = handler_call_details.method
         logger.info(f"Request: {method_name}")
 
         try:
-            response = method(request, context)
+            response = await continuation(handler_call_details)
             process_time = time.time() - start_time
-            logger.info(f"Response: Success (Time: {process_time:.2f}s) - {response}")
+            logger.info(f"Response: Success (Time: {process_time:.2f}s)")
             return response
         except Exception as e:
             process_time = time.time() - start_time

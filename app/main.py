@@ -1,48 +1,75 @@
+import asyncio
 import os
+import uuid
 from concurrent import futures
 
 import grpc
 from grpc_reflection.v1alpha import reflection
 
+from app.application.generation import GenerationService
+from app.application.routing import RoutingService
+from app.core.di import get_dependency
 from app.core.interceptors import LoggingInterceptor
+from app.core.logger import logger
+from app.domain.data import TextData, OptionData
+from app.domain.generation import GenerationOptions, GenerationRequest
+from app.domain.routing import RoutingRequest
 from app.generated.v1.executor import service_pb2_grpc, generation_pb2, routing_pb2, service_pb2, common_pb2
 
-from app.core.logger import logger
 
-
-# Service implementation
 class ExecutorService(service_pb2_grpc.ExecutorServiceServicer):
-    def Generate(self, request: generation_pb2.GenerationRequest,
-                 context: grpc.ServicerContext) -> generation_pb2.GenerationResponse:
-        text = request.input.text
-        use_memory = request.options.use_memory
-        response_schema = request.options.response_json_schema
+    def __init__(self):
+        self.generation_service = get_dependency(GenerationService)
+        self.routing_service = get_dependency(RoutingService)
 
-        # Your generation logic here
-        generated_text = f"Generated response for: {text}"  # Placeholder
-
-        return generation_pb2.GenerationResponse(
-            generated_output=common_pb2.TextData(text=generated_text)
+    def Generate(
+            self,
+            request: generation_pb2.GenerationRequest,
+            context: grpc.ServicerContext) -> generation_pb2.GenerationResponse:
+        request = GenerationRequest(
+            input=TextData(text=request.input.text),
+            options=GenerationOptions(
+                use_memory=request.options.use_memory,
+                response_json_schema=request.options.response_json_schema
+            ),
+            context_id=uuid.UUID(request.context_id)
         )
 
-    def Route(self, request: routing_pb2.RoutingRequest,
-              context: grpc.ServicerContext) -> routing_pb2.RoutingResponse:
-        text = request.input.text
-        options = [opt.option for opt in request.options]
+        try:
+            result = asyncio.run(self.generation_service.generate(request))
+            logger.info(f"Generated output: {result.generated_output.text}")
+            return generation_pb2.GenerationResponse(
+                generated_output=common_pb2.TextData(text=result.generated_output.text)
+            )
+        except Exception as e:
+            return generation_pb2.GenerationResponse(
+                error=str(e)
+            )
 
-        # Your routing logic here
-        selected = options[0] if options else ""
-        is_fallback = False
-
-        return routing_pb2.RoutingResponse(
-            selected_option=common_pb2.OptionData(option=selected),
-            is_fallback=is_fallback
+    def Route(
+            self,
+            request: routing_pb2.RoutingRequest,
+            context: grpc.ServicerContext) -> routing_pb2.RoutingResponse:
+        request = RoutingRequest(
+            input=TextData(text=request.input.text),
+            options=[OptionData(option=opt.option) for opt in request.options]
         )
 
+        try:
+            result = asyncio.run(self.routing_service.route(request))
+            logger.info(f"Selected option: {result.selected_option.option}")
+            return routing_pb2.RoutingResponse(
+                selected_option=common_pb2.OptionData(option=result.selected_option.option),
+                is_fallback=result.is_fallback
+            )
+        except Exception as e:
+            return routing_pb2.RoutingResponse(
+                error=str(e)
+            )
 
-def serve():
-    server = grpc.server(
-        futures.ThreadPoolExecutor(max_workers=10),
+
+async def serve():
+    server = grpc.aio.server(
         interceptors=[LoggingInterceptor()]
     )
 
@@ -63,9 +90,9 @@ def serve():
     # Start the server
     server.add_insecure_port('[::]:50051')
     logger.info("Starting Chatbot Builder Executor gRPC server on port 50051 with reflection enabled")
-    server.start()
-    server.wait_for_termination()
+    await server.start()
+    await server.wait_for_termination()
 
 
 if __name__ == '__main__':
-    serve()
+    asyncio.run(serve())
