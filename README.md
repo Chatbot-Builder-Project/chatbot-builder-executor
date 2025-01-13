@@ -10,8 +10,12 @@ LLM generation calls, and other processing tasks.
 1. Add `.env` file in the `app` directory with variables:
     - `OPENAI_ENDPOINT`
     - `OPENAI_KEY`
+2. If you want to use DeepSeek Model instead of the default AzureOpenAi model, add the following variables too:
+    - `USE_DEEPSEEK` and set it to `true`
+    - `DEEPSEEK_ENDPOINT` and set it to `https://api.deepseek.com`
+    - `DEEPSEEK_KEY`
 
-2. Before running the service, you’ll need to generate the gRPC code from the `.proto` files to ensure the service can
+3. Before running the service, you’ll need to generate the gRPC code from the `.proto` files to ensure the service can
    communicate with other services.
 
 ### Generate gRPC Code Locally

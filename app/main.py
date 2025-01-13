@@ -43,7 +43,7 @@ class ExecutorService(service_pb2_grpc.ExecutorServiceServicer):
             )
         except Exception as e:
             return generation_pb2.GenerationResponse(
-                error=str(e)
+                error=generation_pb2.GenerationError(message=str(e))
             )
 
     def Route(
@@ -64,7 +64,7 @@ class ExecutorService(service_pb2_grpc.ExecutorServiceServicer):
             )
         except Exception as e:
             return routing_pb2.RoutingResponse(
-                error=str(e)
+                error=routing_pb2.RoutingError(message=str(e))
             )
 
 
