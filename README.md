@@ -7,7 +7,9 @@ LLM generation calls, and other processing tasks.
 
 ## Setup
 
-1. Add `.env` file in the `app` directory (no variables are required for now).
+1. Add `.env` file in the `app` directory with variables:
+    - `OPENAI_ENDPOINT`
+    - `OPENAI_KEY`
 
 2. Before running the service, you’ll need to generate the gRPC code from the `.proto` files to ensure the service can
    communicate with other services.
