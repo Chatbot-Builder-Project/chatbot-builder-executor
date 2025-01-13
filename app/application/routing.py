@@ -1,12 +1,5 @@
-from abc import abstractmethod, ABC
-
+from app.application.abstract.services import RoutingService
 from app.domain.routing import RoutingRequest, RoutingResponse
-
-
-class RoutingService(ABC):
-    @abstractmethod
-    async def route(self, request: RoutingRequest) -> RoutingResponse:
-        pass
 
 
 class DefaultRoutingService(RoutingService):

@@ -1,7 +1,8 @@
 from injector import Binder, Injector
 
-from app.application.generation import GenerationService, DefaultGenerationService
-from app.application.routing import RoutingService, DefaultRoutingService
+from app.application.abstract.services import GenerationService, RoutingService
+from app.application.generation import DefaultGenerationService
+from app.application.routing import DefaultRoutingService
 
 
 # Configure the dependency injection container

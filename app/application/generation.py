@@ -1,13 +1,6 @@
-from abc import abstractmethod, ABC
-
+from app.application.abstract.services import GenerationService
 from app.domain.data import TextData
 from app.domain.generation import GenerationResponse, GenerationRequest
-
-
-class GenerationService(ABC):
-    @abstractmethod
-    async def generate(self, request: GenerationRequest) -> GenerationResponse:
-        pass
 
 
 class DefaultGenerationService(GenerationService):
