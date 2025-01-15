@@ -30,7 +30,7 @@ def configure(binder: Binder) -> None:
     binder.bind(ChatModelFactory, to=chat_model_factory)
 
     binder.bind(GenerationService, to=DefaultGenerationService(chat_model_factory))
-    binder.bind(RoutingService, to=DefaultRoutingService)
+    binder.bind(RoutingService, to=DefaultRoutingService(chat_model_factory))
     pass
 
 
