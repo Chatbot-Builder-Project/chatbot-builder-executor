@@ -63,7 +63,7 @@ class DeepSeekChatModelFactory(ChatModelFactory):
         :return: Instance of DeepSeekChat.
         """
         return ChatOpenAI(
-            model="deepseek-chat",
+            model="gpt-4o-mini-2024-07-18",
             openai_api_key=self.api_key,
             openai_api_base=self.endpoint,
         )
